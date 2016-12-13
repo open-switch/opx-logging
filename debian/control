@@ -1,0 +1,33 @@
+Source: opx-logging
+Section: net
+Priority: optional
+Maintainer: Dell <support@dell.com>
+Build-Depends:
+ debhelper (>= 9), dh-autoreconf, libxml2-dev, exuberant-ctags, python-dev
+Standards-Version: 3.9.3
+Vcs-Browser: https://github.com/open-switch/opx-logging
+Vcs-Git: https://github.com/open-switch/opx-logging.git
+
+Package: opx-logging
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+Description: Openswitch logging - logging utilies
+
+Package: libopx-logging1
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Openswitch logging - shared library
+
+Package: libopx-logging-dev
+Section: libdevel
+Architecture: any
+Depends:
+ ${shlibs:Depends}, ${misc:Depends}, libopx-logging1 (= ${binary:Version})
+Description: Openswitch logging - development files
+
+Package: python-opx-logging
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+XB-Python-Version: ${python:Versions}
+Description: Open Switch logging - python binding
+
