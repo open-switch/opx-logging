@@ -4,7 +4,7 @@ import sys
 import subprocess
 import os
 
-ROOT_PATH = "/opt/dell/os10/bin/"
+ROOT_PATH = "/usr/bin/"
 
 enable ="1"
 disable ="0"
@@ -84,7 +84,7 @@ def usage():
     print  "         module-id, similarly if module-id and log-level is given, it will enable All log-sublevel for "
     print  "         the module-id and log-level\n"
     print  "      2. Instead of Module Ids now you can use the module name as string as well, for eg."
-    print  "         os10-logging enable L3_SERVICES "
+    print  "         opx-logging enable L3_SERVICES "
     print "======================================================================================================================="
     print ""
     sys.exit()
