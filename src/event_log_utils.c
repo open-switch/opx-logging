@@ -31,7 +31,7 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
-#define LOGGING_CFG_DIR         "/etc/opt/dell/os10/logging"
+#define LOGGING_CFG_DIR         "/etc/opx/logging"
 #define LOGGING_CFG_FILE         LOGGING_CFG_DIR"/config.xml"
 
 static int log_level_list [] = {
