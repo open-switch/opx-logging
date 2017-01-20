@@ -14,7 +14,7 @@ lvlstr_to_id_map = {}
 sublvlstr_to_id_map = {}
 
 def populate_string_to_id_map():
-    p = subprocess.check_output(ROOT_PATH+"event_log_cli info", shell=True)
+    p = subprocess.check_output(ROOT_PATH+"opx_logging_cli_tool info", shell=True)
     for i in p.split("\n"):
         l = i.split()
         if len(l) >0 and l[0] and "=" not in l[0] and l[0] == "Module":
@@ -62,7 +62,7 @@ def get_module_str(arg_str):
         sys.exit()
 
 def show_id():
-    os.system(ROOT_PATH+"event_log_cli info")
+    os.system(ROOT_PATH+"opx_logging_cli_tool info")
 
 def usage():
     print ""
@@ -126,17 +126,17 @@ def parse_args():
 def logging_cli_handler():
     populate_string_to_id_map()
     if sys.argv[1] == "load":
-        os.system(ROOT_PATH+"event_log_cli load")
+        os.system(ROOT_PATH+"opx_logging_cli_tool load")
     if sys.argv[1] == "show":
-        os.system(ROOT_PATH+"event_log_cli show "+parse_args())
+        os.system(ROOT_PATH+"opx_logging_cli_tool show "+parse_args())
     if sys.argv[1] == "enable":
-        os.system(ROOT_PATH+"event_log_cli enable "+parse_args())
+        os.system(ROOT_PATH+"opx_logging_cli_tool enable "+parse_args())
     if sys.argv[1] == "disable":
-        os.system(ROOT_PATH+"event_log_cli disable "+parse_args())
+        os.system(ROOT_PATH+"opx_logging_cli_tool disable "+parse_args())
     if sys.argv[1] == "show-id":
         show_id()
     if sys.argv[1] == "set":
-        os.system(ROOT_PATH+"event_log_cli set "+parse_args())
+        os.system(ROOT_PATH+"opx_logging_cli_tool set "+parse_args())
 
 def main():
     arg_validation()
