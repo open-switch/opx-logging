@@ -1,6 +1,5 @@
-opx-logging (1.0.1) main; urgency=medium
+opx-logging (1.0.1) unstable; urgency=medium
 
-  * First version of the openswitch logging project.
+  * Initial release.
 
- -- Cliff Wichmann <cwichmann@cliff-dev>  Wed, 15 Jun 2016 19:16:11 -0700
-
+ -- Dell EMC <ops-dev@lists.openswitch.net>  Wed, 01 Feb 2017 09:44:15 -0800
