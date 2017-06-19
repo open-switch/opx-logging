@@ -18,27 +18,26 @@
  * filename: event_log_unittest.cpp
  */
 
-
 #include "event_log.h"
 #include "gtest/gtest.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
-#include "event_log_utils.h"
-
-
 
 bool event_log_change_status_test(){
-    evt_check_log_init();
-    event_log_change_status(ev_log_t_NPU,EV_T_LOG_DEBUG,ev_log_s_WARNING,true);
+
     EV_LOG_TRACE(ev_log_t_NPU,ev_log_s_WARNING,"ID","Error occured.. %d %s",0,"Cliff");
-    event_log_change_status(ev_log_t_NPU,EV_T_LOG_DEBUG,ev_log_s_WARNING,false);
+
+    event_logging_set_enabled_flag("ev_log_t_NPU",EV_T_LOG_DEBUG,false);
     EV_LOG_TRACE(ev_log_t_NPU,ev_log_s_WARNING,"ID","Error occured..%d %s",1,"2");
     EV_LOG_TRACE(ev_log_t_NPU,ev_log_s_MINOR,"ID","Error occured..%d %s",1,"Viraj");
     EV_LOG_INFO(ev_log_t_NPU,ev_log_s_WARNING,"ID","Error occured..%d %s",1,"2");
     EV_LOG_INFO(ev_log_t_NPU,ev_log_s_MAJOR,"ID","Error occured..%d %s",1,"Viraj");
-    event_log_change_status(ev_log_t_NPU,EV_T_LOG_DEBUG,ev_log_s_WARNING,true);
+    EV_LOG(INFO,NPU,0,"ID","Error occured..%d %s",1,"Viraj2");
+
+    event_logging_set_enabled_flag("ev_log_t_NPU",EV_T_LOG_DEBUG,true);
+    kill(getpid(),SIGUSR1);
     EV_LOG_ERR(ev_log_t_NPU,ev_log_s_MINOR,"ID","Error occured..%d %s",1,"2");
     EV_LOGGING(NAS_L2,EMERG,"EMERG","Error occured..%d %s",1,"2");
     EV_LOGGING(NAS_L2,ALERT,"ALERT","Error occured..%d %s",1,"2");
@@ -51,7 +50,7 @@ bool event_log_change_status_test(){
     struct stat sb;
     int rc = stat("/noname/notexist",&sb);
     if (rc!=0) {
-        EV_LOG_ERRNO(ev_log_t_NPU,ev_log_s_MINOR,0,errno);
+        EV_LOG_ERRNO(ev_log_t_NPU,ev_log_s_MINOR,"Minor",errno);
     }
     return true;
 }

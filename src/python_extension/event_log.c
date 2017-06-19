@@ -20,88 +20,46 @@
 
 extern int event_log_name_to_mod(const char *name, int len);
 
-static PyObject *
-log_trace(PyObject *self, PyObject *args)
+static PyObject *__all_logs(int log_level, PyObject *self, PyObject *args)
 {
-    int        lvl, linenum;
-    const char *modname, *id, *filename, *funcname, *mesg;
+    int        lvl, lineno;
+    const char *modname, *tag, *filename, *func, *msg;
 
-    if (!PyArg_ParseTuple(args, "sisssis", &modname, &lvl, &id, &filename, &funcname, &linenum, &mesg))  return (NULL);
+    if (!PyArg_ParseTuple(args, "sisssis", &modname, &lvl, &tag, &filename, &func, &lineno, &msg))  return (NULL);
 
-    int mod = event_log_name_to_mod(modname, strlen(modname));
-    if (mod < 0)  return (NULL);
-
-    if (event_log_is_enabled(mod, EV_T_LOG_DEBUG, lvl)) {
-        event_log_msg(mod, EV_T_LOG_DEBUG, lvl, "[%s:%s]:%s:%s:%d, %s",
-                      modname, id, filename, funcname, linenum, mesg
-                      );
+    if (event_logging_is_enabled(modname, lvl)) {
+        char _ln[100];
+        char _file[512];
+        snprintf(_ln,sizeof(_ln)-1,"CODE_LINE=%d",(int)lineno);
+        snprintf(_file,sizeof(_file)-1,"CODE_FILE=%s",filename);
+        event_log_msg(modname, lvl, 0,_file,_ln,func,tag,0,msg);
     }
 
     return (Py_BuildValue(""));
+}
+
+
+static PyObject *
+log_trace(PyObject *self, PyObject *args)
+{
+    return __all_logs(EV_T_LOG_DEBUG,self,args);
 }
 
 static PyObject *
 log_info(PyObject *self, PyObject *args)
 {
-    int        lvl, linenum;
-    const char *modname, *id, *filename, *funcname, *mesg;
-
-    if (!PyArg_ParseTuple(args, "sisssis", &modname, &lvl, &id, &filename, &funcname, &linenum, &mesg))  return (NULL);
-
-    int mod = event_log_name_to_mod(modname, strlen(modname));
-    if (mod < 0)  return (NULL);
-
-    if (event_log_is_enabled(mod, EV_T_LOG_INFO, lvl)) {
-        event_log_msg(mod, EV_T_LOG_INFO, lvl, "[%s:%s]:%s:%s:%d, %s",
-                      modname, id, filename, funcname, linenum, mesg
-                      );
-    }
-
-    return (Py_BuildValue(""));
+    return __all_logs(EV_T_LOG_INFO,self,args);
 }
 
 static PyObject *
 log_err(PyObject *self, PyObject *args)
 {
-    int        lvl;
-    const char *modname, *id, *mesg;
-
-    if (!PyArg_ParseTuple(args, "siss", &modname, &lvl, &id, &mesg))  return (NULL);
-
-    int mod = event_log_name_to_mod(modname, strlen(modname));
-    if (mod < 0)  return (NULL);
-
-    if (event_log_is_enabled(mod, EV_T_LOG_ERR, lvl)) {
-        event_log_msg(mod, EV_T_LOG_ERR, lvl,"[%s:%s], %s",
-                      modname, id, mesg
-                      );
-    }
-
-    return (Py_BuildValue(""));
+    return __all_logs(EV_T_LOG_ERR,self,args);
 }
 
 static PyObject * logging(PyObject *self, PyObject *args)
 {
-    int        lvl, linenum;
-    const char *modname, *id, *filename, *funcname, *mesg;
-
-    if (!PyArg_ParseTuple(args, "sisssis", &modname, &lvl, &id, &filename, &funcname, &linenum, &mesg))  return (NULL);
-
-
-    int mod = event_log_name_to_mod(modname, strlen(modname));
-    if (mod < 0)  return (NULL);
-
-    if (event_logging_is_enabled(mod, lvl)) {
-        if(lvl >= EV_T_LOG_INFO){
-            event_log_msg(mod, lvl, lvl, "[%s:%s]:%s:%s:%d, %s",
-                          modname, id, filename, funcname, linenum, mesg);
-        }else{
-            event_log_msg(mod, lvl, lvl,"[%s:%s], %s",
-                          modname, id, mesg);
-        }
-    }
-
-    return (Py_BuildValue(""));
+    return __all_logs(EV_T_LOG_INFO,self,args);
 }
 
 static PyMethodDef methods[] = {

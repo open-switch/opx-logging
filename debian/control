@@ -3,7 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Dell EMC <ops-dev@lists.openswitch.net>
 Build-Depends:
- debhelper (>= 9), dh-autoreconf, libxml2-dev, exuberant-ctags, python-dev
+ debhelper (>= 9), dh-autoreconf, libxml2-dev, exuberant-ctags, python-dev, libsystemd-dev
 Standards-Version: 3.9.3
 Vcs-Browser: https://github.com/open-switch/opx-logging
 Vcs-Git: https://github.com/open-switch/opx-logging.git

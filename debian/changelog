@@ -1,3 +1,11 @@
+opx-logging (2.0.0) unstable; urgency=medium
+
+  * Update: Designed logging module to use systemd journal
+  * Update: Modifications to opx_logging_cli script and logs up to and including INFO are disabled by default
+  * Update: Support for SIGHUP for log file updates and enable all
+
+ -- Dell EMC <ops-dev@lists.openswitch.net>  Mon, 19 June 2017 13:16:24 -0700
+
 opx-logging (1.0.1) unstable; urgency=medium
 
   * Initial release.
