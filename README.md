@@ -12,4 +12,4 @@ All headers are located in OPX, and will be installed in the _*/usr/include/opx*
 
 See [Architecture](https://github.com/open-switch/opx-docs/wiki/Architecture) for more information on the Logging module.
 
-(c) 2017 Dell
+(c) 2017 Dell EMC
