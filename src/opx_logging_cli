@@ -87,14 +87,19 @@ def __log_level_to_string(level):
         return i
 
 def __print_log_config():
-    print('By default all applications will be enabled for all logs except info and debug.  The following override the default configuration')
+
+    print('By default all applications will be enabled for all logs except info and debug. The following override the default configuration')
+
     for i in __maps:
+
+        if i == 'ALL':
+            if __log_enable_to_string(__maps[i])=='Disable':
+                print('All logs are disabled due to override flag')
+            continue
+
         if _args['module']!=None and _args['module']!=i and _args['module']!='all':
             if _args['d']:
                 print ('Skipping %s' % i)
-            continue
-        if i == 'ALL' and __log_enable_to_string(__maps[i])=='Disable':
-            print('All logs are disabled due to override flag')
             continue
 
         for lvl in __maps[i]:
