@@ -100,6 +100,17 @@ void event_logging_set_enabled_flag(const char *mod,size_t loglvl, bool how);
 bool event_log_msg(const char *module, int level, int ident, const char *file,
         const char * ln, const char *fun, const char *tag, int err, const char *msg,...);
 
+/**
+ * @brief - load the latest logging configuration after it has been changed
+ *
+ * Loading of the latest logging configuration is already handled when user
+ * send the SIGUP signal to the process. This API can be used if some third
+ * party applications are handling the SIGHUP signal and in this case new logging
+ * configuration needs to be loaded at run time.
+ *
+ */
+
+void event_log_reload_config(void);
 
 #include "event_log_dep.h"
 

@@ -15,11 +15,10 @@
  */
 
 /*
- * filename: event_log.c
+ * filename: event_log.cpp
  */
 
 #include "event_log.h"
-
 #include "event_log_types.h"
 
 #include <stdarg.h>
@@ -41,7 +40,7 @@
 /*maybe take this path from the make environment in the near future*/
 #define _LOG_CONFIG_FILE "/etc/opx/evlog.cfg"
 
-const char *_log_file_name = _LOG_CONFIG_FILE;
+static const char *_log_file_name = _LOG_CONFIG_FILE;
 static pthread_once_t event_log_lib_inited = PTHREAD_ONCE_INIT;
 
 static std::unordered_map<std::string,std::vector<bool>> * _mods;
@@ -66,8 +65,14 @@ inline void __fix_module(const char* &mod) {
     if (mod==nullptr) mod = "";
 }
 
+
 static void _reload_config(int sig) {
     time(&_last_signal);
+}
+
+
+void event_log_reload_config(){
+    _reload_config(0);
 }
 
 #include <sys/signal.h>
