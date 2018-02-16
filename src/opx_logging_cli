@@ -88,7 +88,7 @@ def __log_level_to_string(level):
 
 def __print_log_config():
 
-    print('By default all applications will be enabled for all logs except info and debug. The following override the default configuration')
+    print('All logs levels - except info and debug - are enabled for all applications. The following overrides the default configuration')
 
     for i in __maps:
 
