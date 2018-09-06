@@ -1,3 +1,11 @@
+opx-logging (2.1.1+opx1) unstable; urgency=medium
+
+  [ Tyler Heucke ]
+  * Switch to dpkg-source 3.0 (native) format
+  * Resolve lintian issues
+
+ -- Dell EMC <ops-dev@lists.openswitch.net>  Thu, 06 Sep 2018 09:21:08 -0700
+
 opx-logging (2.1.1) unstable; urgency=medium
 
   * Update: Modification in print_log_config function in opx_logging_cli script 
