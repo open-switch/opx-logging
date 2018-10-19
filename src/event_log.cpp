@@ -36,8 +36,10 @@
 #include <algorithm>
 #include <systemd/sd-journal.h>
 
-/*Future home can be determined but we have a general default and can be overridden by environmental variables*/
-/*maybe take this path from the make environment in the near future*/
+/* Future home can be determined but we have a general default and can be
+ * overridden by environmental variables
+ * maybe take this path from the make environment in the near future
+ */
 #define _LOG_CONFIG_FILE "/etc/opx/evlog.cfg"
 
 static const char *_log_file_name = _LOG_CONFIG_FILE;
