@@ -38,8 +38,21 @@
 //  Used in the script for automation if new log level added please update it accordingly.
 #define MAX_LOG_LEVEL 7
 
-//  Used to identify alarm related logs
-#define ALM_ID 1
+//  Used to identify special  logs
+enum ev_log_e {
+    ev_log_trace,
+    ev_log_alarm,
+    ev_log_debug,
+    ev_log_event,
+    ev_log_audit
+};
+
+#
+/* Audit log facility */
+#define EV_T_LOG_AUDIT (13<<3)
+
+/* Default trace facility */
+#define DEFAULT_TRACE_FACILITY LOG_LOCAL7
 
 //   Enums are used as index, so be careful when adding a new sublevel, only increment by one
 enum e_log_sublevel {

@@ -1,0 +1,55 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2018 Dell Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# THIS CODE IS PROVIDED ON AN #AS IS* BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT
+#  LIMITATION ANY IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS
+# FOR A PARTICULAR PURPOSE, MERCHANTABLITY OR NON-INFRINGEMENT.
+#
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+from sys import exit
+
+from subprocess import call
+from sys import exit
+
+rc = 0
+# Check public network connectivity
+hostname = 'www.dell.com'
+if call(['ping', '-c', '1', hostname]) !=0: 
+    resolv_path = '/etc/resolv.conf'
+    with open(resolv_path, 'a+') as nameserver_file:
+        if 'nameserver 8.8.8.8' not in nameserver_file.read():
+            nameserver_file.write('nameserver 8.8.8.8\n')
+
+if call(['ping', '-c', '1', hostname]) !=0:
+    exit('Unable to resolve hosts. Terminating...')
+        
+# Install pytest
+call(['sudo', 'apt-get', 'update'])
+call(['sudo', 'apt-get', '-y', 'install', 'python-pip'])
+call(['pip', 'install', 'pytest'])
+
+# Run unit tests
+try:
+    if (call ('./event_log_unittest') != 0):
+        rc = 1
+
+except Exception as e:
+    print e.message, e.args
+
+
+exit (rc)
+
+# Local Variables:
+# tab-width:4
+# indent-tabs-mode:nil
+# End:
+# vim: set expandtab tabstop=4 shiftwidth=4:
