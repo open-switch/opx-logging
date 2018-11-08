@@ -23,7 +23,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-#include <syslog.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
 #include <unistd.h>
@@ -32,6 +32,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <algorithm>
 #include <systemd/sd-journal.h>
@@ -40,6 +41,23 @@
 /*maybe take this path from the make environment in the near future*/
 #define _LOG_CONFIG_FILE "/etc/opx/evlog.cfg"
 
+/****
+ * Environment variable for getting the vendor and OS string
+ * OPX_LOGPREFIX is the name of the environment variable that
+ * stores the brand specific log prefix
+ **/
+#define LOG_PREFIX "OPX_LOGPREFIX"
+
+/* Log format literals */
+#define SP_TAG " "
+#define COMMA_TAG ","
+#define ALARM_TAG "[alarm]"
+#define EVENT_TAG "[event]"
+#define DEBUG_TAG "[debug]"
+#define AUDIT_TAG "[audit]"
+#define CHASSIS_TAG "Node.1-Unit.1:PRI"
+#define JOURNAL_MSG_TAG "MESSAGE="
+static std::string log_prefix;
 static const char *_log_file_name = _LOG_CONFIG_FILE;
 static pthread_once_t event_log_lib_inited = PTHREAD_ONCE_INIT;
 
@@ -77,9 +95,48 @@ void event_log_reload_config(){
 
 #include <sys/signal.h>
 
+/****
+ * @brief Fetches the environment variable by variable name
+ * @param var environment variable name in context
+ * @return value stored in the env variable as a standard string
+ * In case brand environment variable is not present, the
+ * default return value of this function is an empty string
+ **/
+static std::string get_environment_variable(const char *var)
+{
+    char *prefix = getenv(var);
+
+    /****
+     * Initializing string constructor with a nullptr is an undefined
+     * behavior, which could be disastrous. In this code, I have taken
+     * care to fall back to defaults in-case vendor environment is not
+     * setup
+     **/
+
+    return prefix != NULL ? std::string{prefix} : std::string{""};
+}
+
 void event_log_init() {
-    std::vector<size_t> _levels =  {EV_T_LOG_EMERG,EV_T_LOG_ALERT,EV_T_LOG_CRIT,EV_T_LOG_ERR,
-        EV_T_LOG_WARNING,EV_T_LOG_NOTICE,EV_T_LOG_INFO,EV_T_LOG_DEBUG };
+    /****
+     * openlogs API is used to open syslog sockect with special option
+     * to record PID. call to closelog API is optional.
+     * Ref: https://www.gnu.org/software/libc/manual/html_node/openlog.html
+     **/
+    openlog (NULL, LOG_PID, DEFAULT_TRACE_FACILITY);
+    log_prefix = get_environment_variable(LOG_PREFIX);
+
+    syslog(LOG_MAKEPRI(DEFAULT_TRACE_FACILITY,LOG_DEBUG), "LOG PREFIX: %s\n",
+                (log_prefix.size())?log_prefix.c_str():"getenv returned NULL");
+
+    std::vector<size_t> _levels = { EV_T_LOG_EMERG,
+                                    EV_T_LOG_ALERT,
+                                    EV_T_LOG_CRIT,
+                                    EV_T_LOG_ERR,
+                                    EV_T_LOG_WARNING,
+                                    EV_T_LOG_NOTICE,
+                                    EV_T_LOG_INFO,
+                                    EV_T_LOG_DEBUG
+                                 };
 
     std::sort(_levels.begin(),_levels.end());
     _min_level = _levels.front();
@@ -208,43 +265,91 @@ static inline const char * __adjust_mod_name(const char *mod) {
 bool event_log_msg(const char *module, int level, int ident, const char *file,
             const char * ln, const char *fun, const char *tag, int err, const char *msg,...) {
     va_list lst;
-    va_start(lst,msg);
+    va_start(lst, msg);
 
-    if (ident == ALM_ID) { /* Alarm Support */
-        /****
-         * The following code was added to allow alarm manager retireve events pertaining to
-         * alarm event. After design discussions, it was  decided that event_log_msg will be
-         * morphed to  suit params required for ALM. Therefore, the original  param list may
-         * be used in different context in the following code.
-         */
-        va_list args_cpy;
-        va_copy (args_cpy, lst);
-        const auto sz = std::vsnprintf (nullptr, 0, msg, lst)+1; //Extra byte allocated
+    evt_check_log_init();
 
-        try {
-            std::string detail_desc (sz, '\0');
-            std::vsnprintf (&detail_desc.front(), sz, msg, args_cpy);
-            va_end (args_cpy);
+    std::stringstream aug_msg;
+    uint32_t facility = DEFAULT_TRACE_FACILITY;
+    switch(ident) {
+        case ev_log_trace:
+            vsyslog(LOG_MAKEPRI(level, facility), msg, lst);
+            break;
+        case ev_log_debug:
+            facility = LOG_LOCAL4;
+            aug_msg << CHASSIS_TAG
+                    << SP_TAG << DEBUG_TAG << COMMA_TAG
+                    << SP_TAG << msg;
 
-            sd_journal_send ("PRIORITY=%i", LOG_ALERT, /* alarm entries have higher precedence */
-                    "TAG=alarm",                               /* Filtering tag */
-                    tag, module,fun,detail_desc.c_str(),       /* Log Message */
-                    "EV_NAME=%s", module,                      /* Name of the alarm event */
-                    "EV_DESC=%s", fun,                         /* Description from alarm event */
-                    "EV_SEV=%i", level,                        /* Alarm event severity */
-                    "EV_ID=%i", err,                           /* Alarm event id */
-                    "EV_SRC=%s", file,                         /* Alarm event source */
-                    "EV_ACTION=%s", ln,                        /* Alarm event action */
-                    "EV_DET_DESC=%s", detail_desc.c_str(),     /* Detail desciption from user */
-                    NULL);
-        } catch (const std::bad_alloc&) {
-            va_end (args_cpy);
-            va_end(lst);
-            return false;
+            vsyslog(LOG_MAKEPRI(level, facility), aug_msg.str().c_str(), lst);
+            break;
+        case ev_log_audit:
+            facility = EV_T_LOG_AUDIT;
+            aug_msg << CHASSIS_TAG
+                    << SP_TAG << AUDIT_TAG << COMMA_TAG
+                    << SP_TAG << msg;
+
+            vsyslog(LOG_MAKEPRI(level, facility), aug_msg.str().c_str(), lst);
+            break;
+        case ev_log_event:
+            facility = LOG_LOCAL4;
+            aug_msg << CHASSIS_TAG
+                    << SP_TAG << EVENT_TAG << COMMA_TAG
+                    << SP_TAG;
+
+            if (!log_prefix.empty())
+                aug_msg << log_prefix << SP_TAG;
+
+            aug_msg << msg;
+            vsyslog(LOG_MAKEPRI(level, facility), aug_msg.str().c_str(), lst);
+            break;
+        case ev_log_alarm:
+        {
+            /****
+             * The following code was added to allow alarm manager retireve events pertaining to
+             * alarm event. After design discussions, it was  decided that event_log_msg will be
+             * morphed to  suit params required for ALM. Therefore, the original  param list may
+             * be used in different context in the following code.
+             */
+            va_list args_cpy;
+            va_copy (args_cpy, lst);
+            const auto sz = std::vsnprintf (nullptr, 0, msg, lst)+1; //Extra byte allocated
+
+            try {
+                std::string detail_desc (sz, '\0');
+                std::vsnprintf (&detail_desc.front(), sz, msg, args_cpy);
+                va_end (args_cpy);
+
+                aug_msg << JOURNAL_MSG_TAG << CHASSIS_TAG
+                        << SP_TAG << ALARM_TAG << COMMA_TAG
+                        << SP_TAG;
+                if (!log_prefix.empty())
+                    aug_msg << log_prefix << SP_TAG;
+                aug_msg << tag;
+
+                sd_journal_send (
+                        "PRIORITY=%i", LOG_ALERT,               /* alarm entries have higher precedence */
+                        "TAG=alarm",                            /* Filtering tag */
+                        aug_msg.str().c_str(), module,
+                        fun, detail_desc.c_str(),               /* Log Message */
+                        "EV_NAME=%s", module,                   /* Name of the alarm event */
+                        "EV_DESC=%s", fun,                      /* Description from alarm event */
+                        "EV_SEV=%i", level,                     /* Alarm event severity */
+                        "EV_ID=%i", err,                        /* Alarm event id */
+                        "EV_SRC=%s", file,                      /* Alarm event source */
+                        "EV_ACTION=%s", ln,                     /* Alarm event action */
+                        "EV_DET_DESC=%s", detail_desc.c_str(),  /* Detail desciption from user */
+                        "SYSLOG_FACILITY=%i", 20,               /* alarm event facility */
+                        NULL);
+            } catch (const std::bad_alloc&) {
+                va_end (args_cpy);
+                va_end(lst);
+                return false;
+            }
+            break;
         }
-    } else {
-        evt_check_log_init();
-        sd_journal_printv_with_location(level, file,ln,fun, msg,lst);
+        default:
+            sd_journal_printv_with_location(level, file,ln,fun, msg,lst);
     }
 
     va_end(lst);
