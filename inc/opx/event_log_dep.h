@@ -204,6 +204,7 @@ enum e_event_log_types_enums {
     ev_log_t_DNV_APPS=99,
     ev_log_t_APP_FC=100,
     ev_log_t_SAI_FC=101,
+    ev_log_t_SAI_IPMC=102,
     ev_log_t_MAX                ///add all items above this line
 };
 
